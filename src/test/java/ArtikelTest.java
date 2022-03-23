@@ -1,4 +1,5 @@
 import be.vdab.fietsenjpa.domain.Artikel;
+import be.vdab.fietsenjpa.domain.FoodArtikel;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -11,7 +12,7 @@ class ArtikelTest {
 
     @BeforeEach
     void beforeEach(){
-        artikel = new Artikel("test", BigDecimal.valueOf(10),BigDecimal.valueOf(20));
+        artikel = new FoodArtikel("test", BigDecimal.ONE, BigDecimal.TEN, 1);
     }
 
     @Test

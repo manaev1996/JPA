@@ -1,15 +1,27 @@
 package be.vdab.fietsenjpa.domain;
 
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import org.springframework.core.annotation.Order;
+
+import javax.persistence.*;
 import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "artikels")
-public class Artikel {
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "soort")
+
+public abstract class Artikel {
+    @ElementCollection @OrderBy("vanafAantal")
+
+    @CollectionTable(name = "kortingen", joinColumns = @JoinColumn(name = "artikelId"))
+    private Set<Korting> kortingen;
+
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     long id;
     String naam;
     BigDecimal aankoopprijs;
@@ -19,6 +31,7 @@ public class Artikel {
         this.naam = naam;
         this.aankoopprijs = aankoopprijs;
         this.verkoopprijs = verkoopprijs;
+        this.kortingen = new LinkedHashSet<>();
     }
     protected Artikel(){}
 
@@ -36,6 +49,10 @@ public class Artikel {
 
     public BigDecimal getVerkoopprijs() {
         return verkoopprijs;
+    }
+
+    public  Set<Korting> getKortingen(){
+        return Collections.unmodifiableSet(kortingen);
     }
 
     public void verhoogVerkoopPrijs(BigDecimal bedrag){

@@ -1,5 +1,6 @@
 package be.vdab.fietsenjpa.services;
 import be.vdab.fietsenjpa.domain.Artikel;
+import be.vdab.fietsenjpa.domain.FoodArtikel;
 import be.vdab.fietsenjpa.repositories.ArtikelRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,8 +27,8 @@ public class DefaultArtikelServiceTest {
     @BeforeEach
     void beforeEach() {
         service = new DefaultArtikelService(repository);
-        artikel = new Artikel(
-                "test", BigDecimal.valueOf(20), BigDecimal.valueOf(30));
+        artikel = new FoodArtikel(
+                "test", BigDecimal.valueOf(20), BigDecimal.valueOf(30), 1);
     }
 
     @Test
