@@ -1,33 +1,36 @@
 package be.vdab.fietsenjpa.repositories;
 
-import be.vdab.fietsenjpa.domain.Artikel;
-import be.vdab.fietsenjpa.domain.FoodArtikel;
-import be.vdab.fietsenjpa.domain.Korting;
-import be.vdab.fietsenjpa.domain.NonFoodArtikel;
+import be.vdab.fietsenjpa.domain.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.junit4.AbstractTransactionalJUnit4SpringContextTests;
 
+import javax.persistence.EntityManager;
 import java.math.BigDecimal;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SuppressWarnings({"ConstantConditions", "unused"})
 @DataJpaTest
-@Sql("/insertArtikel.sql")
+@Sql({"/insertArtikelGroep.sql", "/insertArtikel.sql"})
 @Import(JpaArtikelRepository.class)
 
 class JpaArtikelRepositoryTest extends AbstractTransactionalJUnit4SpringContextTests {
     final JpaArtikelRepository repository;
     private static final String ARTIKELS = "artikels";
+    private final EntityManager manager;
 
 
-    public JpaArtikelRepositoryTest(JpaArtikelRepository repository) {
+
+    public JpaArtikelRepositoryTest(JpaArtikelRepository repository, EntityManager manager) {
         this.repository = repository;
+        this.manager = manager;
     }
+
 
     long idvantestArtikel(){
         return jdbcTemplate.queryForObject(
@@ -73,6 +76,21 @@ class JpaArtikelRepositoryTest extends AbstractTransactionalJUnit4SpringContextT
 //                "verkoopprijs = 132 and id = "+idVanTestFoodArtikel())).isOne();
 //    }
 
+    @Test
+    void findBijNaamContains() {
+        List<Artikel> artikels = repository.findByNaamContains("es");
+        manager.clear();
+        assertThat(artikels)
+                .hasSize(countRowsInTableWhere(ARTIKELS, "naam like '%es%'"))
+                .extracting(Artikel::getNaam)
+                .allSatisfy(naam -> assertThat(naam).containsIgnoringCase("es"))
+                .isSortedAccordingTo(String::compareToIgnoreCase);
+        assertThat(artikels)
+                .extracting(Artikel::getArtikelGroep)
+                .extracting(ArtikelGroep::getNaam);
+    }
+
+
 
 
 
@@ -104,15 +122,25 @@ class JpaArtikelRepositoryTest extends AbstractTransactionalJUnit4SpringContextT
     void findOnbestaandeId(){
         assertThat(repository.findById(-1)).isNotPresent();
     }
+
     @Test
     void createFoodArtikel(){
-        FoodArtikel artikel = new FoodArtikel("testfood2", BigDecimal.ONE, BigDecimal.TEN, 7);
+        ArtikelGroep groep = new ArtikelGroep("test");
+        manager.persist(groep);
+        FoodArtikel artikel = new FoodArtikel("testfood",BigDecimal.ONE,BigDecimal.TEN,7,groep);
+
+//        FoodArtikel artikel = new FoodArtikel("testfood2", BigDecimal.ONE, BigDecimal.TEN, 7);
         repository.create(artikel);
         assertThat(countRowsInTableWhere(ARTIKELS, "id = " + artikel.getId())).isOne();
     }
+
     @Test
     void createNonFoodArtikel(){
-        NonFoodArtikel artikel = new NonFoodArtikel("testnonfood2", BigDecimal.ONE, BigDecimal.TEN, 30);
+        ArtikelGroep groep = new ArtikelGroep("test");
+        manager.persist(groep);
+        NonFoodArtikel artikel =
+                new NonFoodArtikel("testnonfood", BigDecimal.ONE, BigDecimal.TEN, 30, groep);
+
         repository.create(artikel);
         assertThat(countRowsInTableWhere(ARTIKELS, "id = " + artikel.getId())).isOne();
     }
@@ -122,6 +150,13 @@ class JpaArtikelRepositoryTest extends AbstractTransactionalJUnit4SpringContextT
         assertThat(repository.findById(idVanTestFoodArtikel()))
                 .hasValueSatisfying(artikel -> assertThat(artikel.getKortingen())
                         .containsOnly(new Korting(1, BigDecimal.TEN)));
+    }
+
+    @Test
+    void artikelGroepLazyLoaded() {
+        assertThat(repository.findById(idVanTestFoodArtikel()))
+                .hasValueSatisfying(artikel ->
+                        assertThat(artikel.getArtikelGroep().getNaam()).isEqualTo("test"));
     }
 
 

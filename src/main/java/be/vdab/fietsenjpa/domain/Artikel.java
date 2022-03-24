@@ -13,6 +13,8 @@ import java.util.Set;
 @Table(name = "artikels")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "soort")
+@NamedEntityGraph(name = Artikel.MET_ARTIKELGROEP,
+        attributeNodes = @NamedAttributeNode("artikelGroep"))
 
 public abstract class Artikel {
     @ElementCollection @OrderBy("vanafAantal")
@@ -27,12 +29,23 @@ public abstract class Artikel {
     BigDecimal aankoopprijs;
     BigDecimal verkoopprijs;
 
-    public Artikel(String naam, BigDecimal aankoopprijs, BigDecimal verkoopprijs) {
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "artikelgroepId")
+    ArtikelGroep artikelGroep;
+    public static final String MET_ARTIKELGROEP = "Artikel.metArtikelGroep";
+
+
+    public Artikel(String naam, BigDecimal aankoopprijs, BigDecimal verkoopprijs,
+                   ArtikelGroep artikelGroep) {
         this.naam = naam;
         this.aankoopprijs = aankoopprijs;
         this.verkoopprijs = verkoopprijs;
         this.kortingen = new LinkedHashSet<>();
+        setArtikelGroep(artikelGroep);
     }
+
+
+
     protected Artikel(){}
 
     public long getId() {
@@ -53,6 +66,17 @@ public abstract class Artikel {
 
     public  Set<Korting> getKortingen(){
         return Collections.unmodifiableSet(kortingen);
+    }
+
+    public ArtikelGroep getArtikelGroep(){
+        return artikelGroep;
+    }
+
+    public void setArtikelGroep(ArtikelGroep artikelGroep) {
+        if (!artikelGroep.getArtikels().contains(this)) {
+            artikelGroep.add(this);
+        }
+        this.artikelGroep = artikelGroep;
     }
 
     public void verhoogVerkoopPrijs(BigDecimal bedrag){

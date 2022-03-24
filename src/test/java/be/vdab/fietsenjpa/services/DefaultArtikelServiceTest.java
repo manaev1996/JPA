@@ -1,5 +1,6 @@
 package be.vdab.fietsenjpa.services;
 import be.vdab.fietsenjpa.domain.Artikel;
+import be.vdab.fietsenjpa.domain.ArtikelGroep;
 import be.vdab.fietsenjpa.domain.FoodArtikel;
 import be.vdab.fietsenjpa.repositories.ArtikelRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,14 +23,18 @@ public class DefaultArtikelServiceTest {
     @Mock
     private ArtikelRepository repository;
     private Artikel artikel;
+    private ArtikelGroep artikelGroep;
+
 
 
     @BeforeEach
     void beforeEach() {
         service = new DefaultArtikelService(repository);
-        artikel = new FoodArtikel(
-                "test", BigDecimal.valueOf(20), BigDecimal.valueOf(30), 1);
+        artikelGroep = new ArtikelGroep("test");
+        artikel = new FoodArtikel("test",BigDecimal.ONE,BigDecimal.TEN,1,artikelGroep);
     }
+    //String naam, BigDecimal aankoopprijs,
+    //                       BigDecimal verkoopprijs, int houdbaarheid, ArtikelGroep artikelGroep
 
     @Test
     void verhoogVerkoopPrijs(){

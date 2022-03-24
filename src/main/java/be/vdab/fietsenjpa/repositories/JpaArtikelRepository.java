@@ -25,16 +25,24 @@ class JpaArtikelRepository implements ArtikelRepository{
         manager.persist(artikel);
     }
 
-    @Override
-    public List<Artikel> findByNaamContains(String woord){
-        return manager.createNamedQuery("Artikel.findByNaamContains", Artikel.class)
-                .setParameter("naam", '%' + woord + '%').getResultList();
-    }
+//    @Override
+//    public List<Artikel> findByNaamContains(String woord){
+//        return manager.createNamedQuery("Artikel.findByNaamContains", Artikel.class)
+//                .setParameter("naam", '%' + woord + '%').getResultList();
+//    }
 
     @Override
     public int verhoogMetPercentage(BigDecimal percentage) {
         return manager.createNamedQuery("Artikel.increasePrice", Artikel.class)
                 .setParameter("percentage", percentage).executeUpdate();
+    }
+    @Override
+    public List<Artikel> findByNaamContains(String woord) {
+        return manager.createNamedQuery("Artikel.findByNaamContains", Artikel.class)
+                .setParameter("naam", '%' + woord + '%')
+                .setHint("javax.persistence.loadgraph",
+                        manager.createEntityGraph(Artikel.MET_ARTIKELGROEP))
+                .getResultList();
     }
 
 }
